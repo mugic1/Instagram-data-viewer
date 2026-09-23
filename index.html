@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instagram JSON Viewer</title>
+<style>
+:root {
+  --bg:#f6f7f9; --panel:#fff; --text:#111; --muted:#666; --border:#ddd; --accent:#0095f6;
+}
+[data-theme="dark"] {
+  --bg:#111; --panel:#1c1c1e; --text:#eee; --muted:#aaa; --border:#333; --accent:#4cb5f9;
+}
+* { box-sizing: border-box; }
+body {
+  margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column;
+}
+header {
+  padding:10px 14px; background:var(--panel); border-bottom:1px solid var(--border);
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+header h1 { font-size:16px; margin:0 12px 0 0; }
+.button, button {
+  background:var(--accent); color:#fff; border:0; border-radius:8px; padding:8px 12px;
+  cursor:pointer; font-weight:600; font-size:14px;
+}
+.button.secondary, button.secondary {
+  background:transparent; color:var(--text); border:1px solid var(--border);
+}
+input[type="search"] {
+  padding:8px 10px; border-radius:8px; border:1px solid var(--border);
+  background:var(--panel); color:var(--text); min-width:220px;
+}
+main { display:flex; flex:1; min-height:0; }
+aside {
+  width:340px; background:var(--panel); border-right:1px solid var(--border);
+  overflow:auto; padding:8px; flex-shrink:0;
+}
+aside h2 {
+  font-size:12px; text-transform:uppercase; color:var(--muted);
+  margin:12px 8px 6px;
+}
+.file-item {
+  padding:8px 10px; border-radius:8px; cursor:pointer; font-size:13px;
+  display:flex; justify-content:space-between; gap:8px; align-items:center;
+}
+.file-item:hover { background:rgba(0,149,246,.1); }
+.file-item.active { background:var(--accent); color:#fff; }
+.file-item .size { font-size:11px; opacity:.7; white-space:nowrap; }
+section.content { flex:1; overflow:auto; padding:16px; min-width:0; }
+.toolbar {
+  display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;
+}
+.tabs { display:flex; gap:4px; }
+.tab {
+  padding:6px 12px; border-radius:8px; border:1px solid var(--border);
+  background:transparent; color:var(--text); cursor:pointer; font-size:13px;
+}
+.tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+pre.raw {
+  background:var(--panel); border:1px solid var(--border); border-radius:12px;
+  padding:14px; overflow:auto; font-size:13px; line-height:1.45;
+  white-space:pre-wrap; word-break:break-word;
+}
+.tree { font-size:14px; line-height:1.5; }
+.tree ul {
+  list-style:none; padding-left:18px; margin:4px 0;
+  border-left:1px dashed var(--border);
+}
+.tree li { margin:2px 0; }
+.tree .key { color:var(--accent); font-weight:600; }
+.tree .string { color:#c41a1a; }
+[data-theme="dark"] .tree .string { color:#ff8a8a; }
+.tree .number { color:#1a7f37; }
+[data-theme="dark"] .tree .number { color:#7ee787; }
+.tree .boolean { color:#8250df; }
+.tree .null { color:var(--muted); }
+.tree details > summary { cursor:pointer; user-select:none; }
+.tree summary::marker { color:var(--muted); }
+.card {
+  background:var(--panel); border:1px solid var(--border); border-radius:12px;
+  padding:14px; margin-bottom:12px;
+}
+.card h3 { margin:0 0 8px; font-size:15px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th, td {
+  text-align:left; padding:6px 8px; border-bottom:1px solid var(--border);
+  vertical-align:top; word-break:break-word;
+}
+th { color:var(--muted); font-weight:600; }
+a { color:var(--accent); }
+.badge {
+  display:inline-block; background:rgba(0,149,246,.12); color:var(--accent);
+  border-radius:999px; padding:2px 8px; font-size:11px; margin-left:6px;
+}
+.empty { color:var(--muted); text-align:center; padding:40px; }
+mark.highlight { background:yellow; color:#111; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📸 Instagram JSON Viewer</h1>
+  <label class="button">Select JSON files <input id="fileInput" type="file" accept=".json,application/json" multiple hidden></label>
+  <label class="button secondary">Select folder <input id="folderInput" type="file" webkitdirectory directory multiple hidden></label>
+  <input id="search" type="search" placeholder="Filter files...">
+  <button id="themeBtn" class="secondary" title="Toggle theme">🌓</button>
+</header>
+<main>
+  <aside>
+    <h2>Files</h2>
+    <div id="fileList"></div>
+  </aside>
+  <section class="content">
+    <div id="welcome" class="empty">
+      <h2>Choose your Instagram JSON export</h2>
+      <p>Everything stays in your browser. Nothing is uploaded.</p>
+      <p>Tip: use <strong>Select folder</strong> and choose the extracted Instagram export folder.</p>
+    </div>
+    <div id="viewer" style="display:none">
+      <div class="toolbar">
+        <strong id="currentFile"></strong>
+        <div class="tabs">
+          <button class="tab active" data-tab="pretty">Pretty</button>
+          <button class="tab" data-tab="raw">Raw JSON</button>
+        </div>
+      </div>
+      <div id="prettyView"></div>
+      <div id="rawView" style="display:none"></div>
+    </div>
+  </section>
+</main>
+<script>
+const $ = (sel) => document.querySelector(sel);
+const state = {
+  files: [],
+  selected: -1,
+  search: '',
+  tab: 'pretty'
+};
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function formatBytes(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(1) + ' MB';
+}
+
+function formatTimestamp(ts) {
+  if (!ts) return '';
+  const n = Number(ts);
+  if (isNaN(n)) return escapeHtml(String(ts));
+  const date = n > 1e12 ? new Date(n) : new Date(n * 1000);
+  return date.toLocaleString();
+}
+
+function renderTree(value) {
+  if (value === null) return '<span class="null">null</span>';
+  const type = typeof value;
+  if (type === 'string') return `<span class="string">"${escapeHtml(value)}"</span>`;
+  if (type === 'number') return `<span class="number">${value}</span>`;
+  if (type === 'boolean') return `<span class="boolean">${value}</span>`;
+  if (Array.isArray(value)) {
+    if (!value.length) return '[]';
+    return `<details open><summary>Array(${value.length})</summary><ul>` +
+      value.map((v, i) => `<li><span class="key">[${i}]</span>: ${renderTree(v)}</li>`).join('') +
+      `</ul></details>`;
+  }
+  if (type === 'object') {
+    const keys = Object.keys(value);
+    if (!keys.length) return '{}';
+    return `<details open><summary>Object{${keys.length}}</summary><ul>` +
+      keys.map(k => `<li><span class="key">${escapeHtml(k)}</span>: ${renderTree(value[k])}</li>`).join('') +
+      `</ul></details>`;
+  }
+  return escapeHtml(String(value));
+}
+
+function renderStringMap(map) {
+  const rows = Object.entries(map).map(([key, val]) => {
+    if (val && typeof val === 'object') {
+      const value = val.value ?? '';
+      const href = val.href ?? '';
+      const ts = val.timestamp ?? '';
+      return `<tr>
+        <td>${escapeHtml(key)}</td>
+        <td>${escapeHtml(value)}</td>
+        <td>${href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">link</a>` : ''}</td>
+        <td>${formatTimestamp(ts)}</td>
+      </tr>`;
+    }
+    return `<tr><td>${escapeHtml(key)}</td><td colspan="3">${escapeHtml(val)}</td></tr>`;
+  }).join('');
+  return `<div class="card"><h3>Details</h3>
+    <table><thead><tr><th>Key</th><th>Value</th><th>Link</th><th>Time</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function renderStringList(list) {
+  const rows = list.map((item, i) => `<tr>
+    <td>${i + 1}</td>
+    <td>${escapeHtml(item.value ?? '')}</td>
+    <td>${item.href ? `<a href="${escapeHtml(item.href)}" target="_blank" rel="noopener">link</a>` : ''}</td>
+    <td>${formatTimestamp(item.timestamp)}</td>
+  </tr>`).join('');
+  return `<table><thead><tr><th>#</th><th>Value</th><th>Link</th><th>Time</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+function renderLabelValues(list) {
+  const rows = list.map(item => `<tr>
+    <td>${escapeHtml(item.label ?? '')}</td>
+    <td>${escapeHtml(item.value ?? '')}</td>
+  </tr>`).join('');
+  return `<div class="card"><h3>Info</h3>
+    <table><thead><tr><th>Label</th><th>Value</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function renderChat(json) {
+  const participants = (json.participants || []).map(p => p.name).filter(Boolean).join(', ');
+  const messages = (json.messages || []).slice().reverse();
+  const rows = messages.map(m => {
+    const sender = m.sender_name || 'Unknown';
+    const time = m.timestamp_ms ? new Date(m.timestamp_ms).toLocaleString() : '';
+    let content = m.content || '';
+    if (m.photos?.length) content += ` [${m.photos.length} photo(s)]`;
+    if (m.videos?.length) content += ` [${m.videos.length} video(s)]`;
+    if (m.audio_files?.length) content += ` [audio]`;
+    if (m.share) content += ` [shared: ${m.share.link || ''}]`;
+    return `<div class="card" style="margin:6px 0; padding:10px;">
+      <div style="font-size:12px; color:var(--muted);">
+        <strong>${escapeHtml(sender)}</strong> · ${escapeHtml(time)}
+      </div>
+      <div>${escapeHtml(content)}</div>
+    </div>`;
+  }).join('');
+  return `<div class="card"><h3>Conversation with ${escapeHtml(participants)} <span class="badge">${messages.length} messages</span></h3>${rows}</div>`;
+}
+
+function renderSmartItem(item, idx) {
+  if (item && typeof item === 'object') {
+    let html = `<div class="card"><h3>Item ${idx + 1}</h3>`;
+    if (item.title) html += `<div style="margin-bottom:8px;"><strong>${escapeHtml(item.title)}</strong></div>`;
+    if (item.string_list_data) {
+      html += renderStringList(item.string_list_data);
+    } else if (item.string_map_data) {
+      html += renderStringMap(item.string_map_data);
+    } else if (item.label_values) {
+      html += renderLabelValues(item.label_values);
+    } else {
+      html += `<div class="tree">${renderTree(item)}</div>`;
+    }
+    html += `</div>`;
+    return html;
+  }
+  return `<div class="card"><div class="tree">${renderTree(item)}</div></div>`;
+}
+
+function renderPretty(json) {
+  let html = '';
+  if (Array.isArray(json)) {
+    html += `<div class="card"><h3>Array <span class="badge">${json.length} items</span></h3>`;
+    html += json.map((item, idx) => renderSmartItem(item, idx)).join('');
+    html += `</div>`;
+    html += `<details class="card"><summary>Raw tree</summary><div class="tree">${renderTree(json)}</div></details>`;
+    return html;
+  }
+  if (json && typeof json === 'object') {
+    if (json.participants && json.messages) {
+      html += renderChat(json);
+    }
+    if (json.string_map_data) {
+      html += renderStringMap(json.string_map_data);
+    }
+    if (json.label_values) {
+      html += renderLabelValues(json.label_values);
+    }
+    const handled = new Set(['participants', 'messages', 'string_map_data', 'label_values']);
+    const otherKeys = Object.keys(json).filter(k => !handled.has(k));
+    if (otherKeys.length) {
+      html += `<div class="card"><h3>Overview</h3>`;
+      for (const k of otherKeys) {
+        const v = json[k];
+        let display;
+        if (Array.isArray(v)) {
+          display = `<span class="badge">${v.length} items</span>`;
+        } else if (v && typeof v === 'object') {
+          display = `<span class="badge">${Object.keys(v).length} keys</span>`;
+        } else {
+          display = escapeHtml(v);
+        }
+        html += `<div style="margin:6px 0;"><strong>${escapeHtml(k)}:</strong> ${display}</div>`;
+      }
+      html += `</div>`;
+    }
+    html += `<details class="card"><summary>Raw tree</summary><div class="tree">${renderTree(json)}</div></details>`;
+    return html;
+  }
+  return `<div class="card"><div class="tree">${renderTree(json)}</div></div>`;
+}
+
+function renderFileList() {
+  const list = $('#fileList');
+  const q = state.search;
+  const items = state.files
+    .map((f, i) => ({ f, i }))
+    .filter(({ f }) => !q || f.path.toLowerCase().includes(q));
+  if (!items.length) {
+    list.innerHTML = '<div class="empty">No matching files</div>';
+    return;
+  }
+  list.innerHTML = items.map(({ f, i }) => `
+    <div class="file-item ${i === state.selected ? 'active' : ''}" data-index="${i}">
+      <span>${escapeHtml(f.path)}</span>
+      <span class="size">${formatBytes(f.size)}</span>
+    </div>
+  `).join('');
+  list.querySelectorAll('.file-item').forEach(el => {
+    el.addEventListener('click', () => selectFile(Number(el.dataset.index)));
+  });
+}
+
+function selectFile(index) {
+  state.selected = index;
+  renderFileList();
+  const f = state.files[index];
+  if (!f) return;
+  $('#welcome').style.display = 'none';
+  $('#viewer').style.display = 'block';
+  $('#currentFile').textContent = f.path;
+
+  if (f.error) {
+    $('#prettyView').innerHTML = `<div class="card"><h3>Error parsing JSON</h3>
+      <p>${escapeHtml(f.error)}</p>
+      <pre class="raw">${escapeHtml(f.raw.slice(0, 20000))}</pre></div>`;
+    $('#rawView').innerHTML = `<pre class="raw">${escapeHtml(f.raw)}</pre>`;
+    return;
+  }
+  renderView();
+}
+
+function renderView() {
+  const f = state.files[state.selected];
+  if (!f || f.error) return;
+  if (state.tab === 'pretty') {
+    $('#prettyView').innerHTML = renderPretty(f.json);
+    $('#rawView').style.display = 'none';
+    $('#prettyView').style.display = 'block';
+  } else {
+    $('#rawView').innerHTML = `<pre class="raw">${escapeHtml(JSON.stringify(f.json, null, 2))}</pre>`;
+    $('#prettyView').style.display = 'none';
+    $('#rawView').style.display = 'block';
+  }
+}
+
+async function handleFiles(fileList) {
+  const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.json'));
+  if (!files.length) {
+    alert('No .json files selected.');
+    return;
+  }
+  for (const file of files) {
+    const text = await file.text();
+    let json = null;
+    let error = null;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      error = e.message;
+    }
+    state.files.push({
+      name: file.name,
+      path: file.webkitRelativePath || file.name,
+      size: file.size,
+      json,
+      error,
+      raw: text
+    });
+  }
+  renderFileList();
+  if (state.selected === -1 && state.files.length) {
+    selectFile(0);
+  }
+}
+
+$('#fileInput').addEventListener('change', e => handleFiles(e.target.files));
+$('#folderInput').addEventListener('change', e => handleFiles(e.target.files));
+$('#search').addEventListener('input', e => {
+  state.search = e.target.value.trim().toLowerCase();
+  renderFileList();
+});
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.tab = btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+    renderView();
+  });
+});
+$('#themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const dark = root.getAttribute('data-theme') === 'dark';
+  root.setAttribute('data-theme', dark ? 'light' : 'dark');
+});
+</script>
+</body>
+            </html>
