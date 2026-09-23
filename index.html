@@ -2,411 +2,329 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Instagram JSON Viewer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instagram Data Viewer</title>
 <style>
-:root {
-  --bg:#f6f7f9; --panel:#fff; --text:#111; --muted:#666; --border:#ddd; --accent:#0095f6;
-}
-[data-theme="dark"] {
-  --bg:#111; --panel:#1c1c1e; --text:#eee; --muted:#aaa; --border:#333; --accent:#4cb5f9;
-}
-* { box-sizing: border-box; }
-body {
-  margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column;
-}
-header {
-  padding:10px 14px; background:var(--panel); border-bottom:1px solid var(--border);
-  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-}
-header h1 { font-size:16px; margin:0 12px 0 0; }
-.button, button {
-  background:var(--accent); color:#fff; border:0; border-radius:8px; padding:8px 12px;
-  cursor:pointer; font-weight:600; font-size:14px;
-}
-.button.secondary, button.secondary {
-  background:transparent; color:var(--text); border:1px solid var(--border);
-}
-input[type="search"] {
-  padding:8px 10px; border-radius:8px; border:1px solid var(--border);
-  background:var(--panel); color:var(--text); min-width:220px;
-}
-main { display:flex; flex:1; min-height:0; }
-aside {
-  width:340px; background:var(--panel); border-right:1px solid var(--border);
-  overflow:auto; padding:8px; flex-shrink:0;
-}
-aside h2 {
-  font-size:12px; text-transform:uppercase; color:var(--muted);
-  margin:12px 8px 6px;
-}
-.file-item {
-  padding:8px 10px; border-radius:8px; cursor:pointer; font-size:13px;
-  display:flex; justify-content:space-between; gap:8px; align-items:center;
-}
-.file-item:hover { background:rgba(0,149,246,.1); }
-.file-item.active { background:var(--accent); color:#fff; }
-.file-item .size { font-size:11px; opacity:.7; white-space:nowrap; }
-section.content { flex:1; overflow:auto; padding:16px; min-width:0; }
-.toolbar {
-  display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;
-}
-.tabs { display:flex; gap:4px; }
-.tab {
-  padding:6px 12px; border-radius:8px; border:1px solid var(--border);
-  background:transparent; color:var(--text); cursor:pointer; font-size:13px;
-}
-.tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-pre.raw {
-  background:var(--panel); border:1px solid var(--border); border-radius:12px;
-  padding:14px; overflow:auto; font-size:13px; line-height:1.45;
-  white-space:pre-wrap; word-break:break-word;
-}
-.tree { font-size:14px; line-height:1.5; }
-.tree ul {
-  list-style:none; padding-left:18px; margin:4px 0;
-  border-left:1px dashed var(--border);
-}
-.tree li { margin:2px 0; }
-.tree .key { color:var(--accent); font-weight:600; }
-.tree .string { color:#c41a1a; }
-[data-theme="dark"] .tree .string { color:#ff8a8a; }
-.tree .number { color:#1a7f37; }
-[data-theme="dark"] .tree .number { color:#7ee787; }
-.tree .boolean { color:#8250df; }
-.tree .null { color:var(--muted); }
-.tree details > summary { cursor:pointer; user-select:none; }
-.tree summary::marker { color:var(--muted); }
-.card {
-  background:var(--panel); border:1px solid var(--border); border-radius:12px;
-  padding:14px; margin-bottom:12px;
-}
-.card h3 { margin:0 0 8px; font-size:15px; }
-table { width:100%; border-collapse:collapse; font-size:13px; }
-th, td {
-  text-align:left; padding:6px 8px; border-bottom:1px solid var(--border);
-  vertical-align:top; word-break:break-word;
-}
-th { color:var(--muted); font-weight:600; }
-a { color:var(--accent); }
-.badge {
-  display:inline-block; background:rgba(0,149,246,.12); color:var(--accent);
-  border-radius:999px; padding:2px 8px; font-size:11px; margin-left:6px;
-}
-.empty { color:var(--muted); text-align:center; padding:40px; }
-mark.highlight { background:yellow; color:#111; }
+:root{--bg:#f2f3f5;--panel:#fff;--text:#111;--muted:#68707a;--border:#dcdfe3;--accent:#0095f6;--hl:#fff3bf}
+[data-theme=dark]{--bg:#0f0f10;--panel:#1a1a1c;--text:#ececec;--muted:#9aa0a6;--border:#2e2e31;--accent:#4cb5f9;--hl:#5a4a00}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+header{display:flex;gap:8px;align-items:center;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+header .title{font-weight:700;margin-right:8px}
+button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+button.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+input[type=search]{padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}
+#status{margin-left:auto;color:var(--muted);font-size:13px}
+#layout{flex:1;display:flex;min-height:0}
+#sidebar{width:340px;flex:0 0 340px;background:var(--panel);border-right:1px solid var(--border);overflow:auto;padding:8px}
+#sidebar .group{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:14px 8px 4px}
+.file{padding:7px 10px;border-radius:7px;cursor:pointer;display:flex;gap:8px;justify-content:space-between;align-items:baseline;font-size:13px}
+.file:hover{background:#0095f622}.file.active{background:var(--accent);color:#fff}
+.file .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file .c{font-size:11px;opacity:.7;flex:0 0 auto}
+#content{flex:1;overflow:auto;padding:18px;min-width:0}
+.empty{text-align:center;color:var(--muted);padding:50px 20px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 10px;font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:top;word-break:break-word}
+th{color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+a{color:var(--accent)}
+.badge{display:inline-block;background:#0095f626;color:var(--accent);border-radius:99px;padding:1px 9px;font-size:11px;font-weight:600;margin-left:6px}
+pre{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;font-size:12.5px;white-space:pre-wrap;word-break:break-word}
+.msg{border-left:3px solid var(--border);padding:6px 10px;margin:6px 0}
+.msg .meta{font-size:12px;color:var(--muted)}.msg .who{font-weight:600;color:var(--text)}
+mark{background:var(--hl);color:inherit;border-radius:3px}
+.tabs{display:flex;gap:4px;margin-top:10px}
+.tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;font:inherit;font-size:13px}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+#overlay{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:10;padding:20px}
+#overlay.on{display:flex}
+#overlay .box{background:var(--panel);border-radius:16px;padding:36px 44px;text-align:center;max-width:520px;border:2px dashed var(--border)}
+#overlay .box.hot{border-color:var(--accent)}
+#overlay h2{margin:0 0 8px}#overlay p{color:var(--muted);margin:0}
 </style>
 </head>
 <body>
 <header>
-  <h1>📸 Instagram JSON Viewer</h1>
-  <label class="button">Select JSON files <input id="fileInput" type="file" accept=".json,application/json" multiple hidden></label>
-  <label class="button secondary">Select folder <input id="folderInput" type="file" webkitdirectory directory multiple hidden></label>
-  <input id="search" type="search" placeholder="Filter files...">
-  <button id="themeBtn" class="secondary" title="Toggle theme">🌓</button>
+  <span class="title">📸 Instagram Data Viewer</span>
+  <button id="pickFiles">Choose JSON files</button>
+  <button class="ghost" id="pickFolder">Choose folder</button>
+  <button class="ghost" id="searchAllBtn">Search everything</button>
+  <button class="ghost" id="themeBtn">🌓</button>
+  <span id="status">No files loaded</span>
+  <input type="file" id="fileInput" accept=".json,application/json" multiple hidden>
+  <input type="file" id="folderInput" webkitdirectory multiple hidden>
 </header>
-<main>
-  <aside>
-    <h2>Files</h2>
-    <div id="fileList"></div>
-  </aside>
-  <section class="content">
-    <div id="welcome" class="empty">
-      <h2>Choose your Instagram JSON export</h2>
-      <p>Everything stays in your browser. Nothing is uploaded.</p>
-      <p>Tip: use <strong>Select folder</strong> and choose the extracted Instagram export folder.</p>
-    </div>
-    <div id="viewer" style="display:none">
-      <div class="toolbar">
-        <strong id="currentFile"></strong>
-        <div class="tabs">
-          <button class="tab active" data-tab="pretty">Pretty</button>
-          <button class="tab" data-tab="raw">Raw JSON</button>
-        </div>
-      </div>
-      <div id="prettyView"></div>
-      <div id="rawView" style="display:none"></div>
+<div id="layout">
+  <aside id="sidebar"><div class="empty" style="padding:20px 8px">Nothing loaded yet</div></aside>
+  <section id="content">
+    <div class="empty">
+      <h2>Load your Instagram export</h2>
+      <p>Click <b>Choose folder</b> and pick the folder you unzipped from Instagram,<br>or drag the folder / JSON files anywhere on this page.</p>
+      <p style="font-size:12px;margin-top:14px">Nothing leaves your computer.</p>
     </div>
   </section>
-</main>
+</div>
+<div id="overlay"><div class="box" id="dropbox"><h2>Drop it here</h2><p>JSON files, or the whole unzipped export folder</p></div></div>
+
 <script>
-const $ = (sel) => document.querySelector(sel);
-const state = {
-  files: [],
-  selected: -1,
-  search: '',
-  tab: 'pretty'
+const $=s=>document.querySelector(s);
+const state={files:[],sel:null,tab:'pretty',filter:''};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtSize=n=>n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(1)+' MB';
+function fmtDate(ts){const n=Number(ts);if(!isFinite(n)||n===0)return String(ts);
+  const d=new Date(n>1e12?n:n*1000);return isNaN(d)?String(ts):d.toLocaleString();}
+function card(t,b){return `<div class="card"><h3>${t}</h3>${b}</div>`;}
+function setStatus(t){$('#status').textContent=t;}
+
+function parseJson(text){
+  let t=text;
+  if(t.charCodeAt(0)===0xFEFF)t=t.slice(1);
+  t=t.trim();
+  if(!t)return null;
+  return JSON.parse(t);
+}
+
+function extract(item){
+  if(item===null||item===undefined)return{main:''};
+  if(typeof item==='string')return{main:item};
+  if(typeof item!=='object')return{main:String(item)};
+  if(Array.isArray(item.string_list_data)&&item.string_list_data[0]){
+    const d=item.string_list_data[0];
+    return{main:d.value??item.title??'',sub:(item.title&&item.title!==d.value)?item.title:'',
+      link:d.href||'',date:d.timestamp||''};
+  }
+  if(Array.isArray(item.label_values)){
+    return{main:item.label_values.map(l=>`${l.label||''}: ${l.value??''}`).join('  ·  '),
+      sub:item.title||'',link:item.href||'',date:item.timestamp||''};
+  }
+  const bits=[],title=item.title||'';
+  for(const[k,v]of Object.entries(item)){
+    if(k==='title'||v===null||v===undefined||typeof v==='object')continue;
+    bits.push(`${k}: ${v}`);
+  }
+  return{main:title||bits.join('  ·  ')||JSON.stringify(item).slice(0,300),sub:title?bits.join('  ·  '):''};
+}
+
+function listCard(arr,title){
+  if(!arr.length)return card(esc(title)+' <span class="badge">0</span>','<div class="empty" style="padding:10px">empty</div>');
+  const rows=arr.map((item,i)=>{
+    const e=extract(item);
+    return `<tr><td>${i+1}</td>
+      <td>${esc(e.main)}${e.sub?`<div style="color:var(--muted);font-size:12px;margin-top:2px">${esc(e.sub)}</div>`:''}</td>
+      <td>${e.link?`<a href="${esc(e.link)}" target="_blank" rel="noopener">open ↗</a>`:''}</td>
+      <td>${e.date?esc(fmtDate(e.date)):''}</td></tr>`;
+  }).join('');
+  return card(esc(title)+` <span class="badge">${arr.length}</span>`,
+    `<div style="max-height:70vh;overflow:auto"><table><thead><tr><th>#</th><th>Value</th><th>Link</th><th>Date</th></tr></thead><tbody>${rows}</tbody></table></div>`);
+}
+
+function kvCard(title,obj){
+  let rows;
+  if(Array.isArray(obj)){
+    rows=obj.map(l=>`<tr><td>${esc(l.label??'')}</td><td>${esc(String(l.value??''))}</td></tr>`).join('');
+  }else{
+    rows=Object.entries(obj).map(([k,v])=>{
+      let val='',link='';
+      if(v&&typeof v==='object'){val=v.value??'';link=v.href??'';}
+      else val=v;
+      return `<tr><td>${esc(k)}</td><td>${esc(String(val))}${link?` <a href="${esc(link)}" target="_blank" rel="noopener">↗</a>`:''}</td></tr>`;
+    }).join('');
+  }
+  return card(esc(title),`<table><tbody>${rows}</tbody></table>`);
+}
+
+function chatCard(json){
+  const who=(json.participants||[]).map(p=>p.name).filter(Boolean).join(', ')||'Conversation';
+  const msgs=(json.messages||[]).slice().reverse();
+  const body=msgs.map(m=>{
+    const t=m.timestamp_ms?new Date(m.timestamp_ms).toLocaleString():'';
+    let c=m.content||'';
+    if(m.photos&&m.photos.length)c+=` [${m.photos.length} photo(s)]`;
+    if(m.videos&&m.videos.length)c+=` [${m.videos.length} video(s)]`;
+    if(m.audio_files&&m.audio_files.length)c+=' [voice message]';
+    if(m.share)c+=` [shared: ${m.share.link||''}]`;
+    if(m.reactions&&m.reactions.length)c+=` [${m.reactions.map(r=>r.reaction).join(' ')}]`;
+    return `<div class="msg"><div class="meta"><span class="who">${esc(m.sender_name||'?')}</span> · ${esc(t)}</div><div>${esc(c)}</div></div>`;
+  }).join('');
+  return card(esc(who)+` <span class="badge">${msgs.length} messages</span>`,
+    `<div style="max-height:70vh;overflow:auto">${body}</div>`);
+}
+
+function renderPretty(json){
+  if(json===null||json===undefined)return card('Empty file','');
+  if(Array.isArray(json))return listCard(json,'Items');
+  if(typeof json!=='object')return card('Value',esc(String(json)));
+  if(json.messages&&json.participants)return chatCard(json);
+  const keys=Object.keys(json);
+  if(keys.length===1&&Array.isArray(json[keys[0]]))return listCard(json[keys[0]],keys[0]);
+
+  const out=[];
+  if(json.string_map_data)out.push(kvCard('Details',json.string_map_data));
+  if(json.label_values)out.push(kvCard('Details',json.label_values));
+
+  for(const k of keys){
+    const v=json[k];
+    if(Array.isArray(v)&&k!=='string_map_data'&&k!=='label_values')out.push(listCard(v,k));
+    else if(v&&typeof v==='object'&&!Array.isArray(v)){
+      if(v.string_map_data)out.push(kvCard(k,v.string_map_data));
+      else if(v.label_values)out.push(kvCard(k,v.label_values));
+    }
+  }
+  const scalars=keys.filter(k=>json[k]===null||typeof json[k]!=='object');
+  if(scalars.length)out.unshift(kvCard('Summary',scalars.map(k=>({label:k,value:String(json[k])}))));
+  if(!out.length)out.push(card('Contents',`<pre style="border:0;padding:0;margin:0">${esc(JSON.stringify(json,null,2).slice(0,30000))}</pre>`));
+  return out.join('');
+}
+
+function renderSidebar(){
+  const sb=$('#sidebar'),q=state.filter.toLowerCase();
+  const items=state.files.filter(f=>!q||f.path.toLowerCase().includes(q));
+  if(!items.length){sb.innerHTML='<div class="empty" style="padding:20px 8px">No matches</div>';return;}
+  const groups=new Map();
+  for(const f of items){
+    const dir=f.path.includes('/')?f.path.slice(0,f.path.lastIndexOf('/')):'(root)';
+    if(!groups.has(dir))groups.set(dir,[]);
+    groups.get(dir).push(f);
+  }
+  let html='';
+  for(const[dir,fs]of groups){
+    html+=`<div class="group">${esc(dir)}</div>`;
+    for(const f of fs){
+      const c=f.error?'⚠ parse error':(Array.isArray(f.json)?f.json.length+' items':
+        (f.json&&typeof f.json==='object'?Object.keys(f.json).length+' keys':''));
+      html+=`<div class="file ${f.path===state.sel?'active':''}" data-path="${esc(f.path)}">
+        <span class="n">${esc(f.name)}</span><span class="c">${esc(String(c))}</span></div>`;
+    }
+  }
+  sb.innerHTML=html;
+  sb.querySelectorAll('.file').forEach(el=>el.onclick=()=>{
+    state.sel=el.dataset.path;renderSidebar();renderContent();
+  });
+}
+
+function renderContent(){
+  const c=$('#content'),f=state.files.find(x=>x.path===state.sel);
+  if(!f){c.innerHTML='<div class="empty">Select a file on the left</div>';return;}
+  if(f.error){
+    c.innerHTML=card('Could not parse this file',`<p style="color:var(--muted)">${esc(f.error)}</p>`)+
+      `<pre>${esc(f.raw.slice(0,50000))}</pre>`;return;
+  }
+  const head=card(`${esc(f.path)} <span class="badge">${fmtSize(f.size)}</span>`,
+    `<div class="tabs">
+      <button class="tab ${state.tab==='pretty'?'active':''}" data-tab="pretty">Readable</button>
+      <button class="tab ${state.tab==='raw'?'active':''}" data-tab="raw">Raw JSON</button>
+    </div>`);
+  const body=state.tab==='pretty'?renderPretty(f.json)
+    :`<pre>${esc(JSON.stringify(f.json,null,2))}</pre>`;
+  c.innerHTML=head+body;
+  c.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{state.tab=b.dataset.tab;renderContent();});
+}
+
+async function addFiles(entries){
+  const jsons=entries.filter(e=>/\.json$/i.test(e.file.name));
+  if(!jsons.length){setStatus('⚠ No .json files in that selection');return;}
+  let added=0,skipped=0;
+  for(const e of jsons){
+    if(state.files.some(f=>f.path===e.path&&f.size===e.file.size)){skipped++;continue;}
+    let text='';
+    try{text=await e.file.text();}catch(err){continue;}
+    let json=null,error=null;
+    try{json=parseJson(text);}catch(err){error=err.message;}
+    state.files.push({path:e.path,name:e.file.name,size:e.file.size,json,error,raw:text});
+    added++;
+  }
+  state.files.sort((a,b)=>a.path.localeCompare(b.path));
+  if(!state.sel&&state.files.length)state.sel=state.files[0].path;
+  renderSidebar();renderContent();
+  setStatus(`${state.files.length} file${state.files.length===1?'':'s'} loaded`+(added?` (+${added})`:''));
+}
+
+async function walkEntry(entry,prefix,out){
+  if(entry.isFile){
+    const file=await new Promise((res,rej)=>entry.file(res,rej));
+    out.push({file,path:prefix+entry.name});
+  }else if(entry.isDirectory){
+    const reader=entry.createReader(),all=[];
+    while(true){
+      const batch=await new Promise((res,rej)=>reader.readEntries(res,rej));
+      if(!batch.length)break;
+      all.push(...batch);
+    }
+    for(const e of all)await walkEntry(e,prefix+entry.name+'/',out);
+  }
+}
+
+async function entriesFromDrop(dt){
+  const out=[],items=dt.items;
+  if(items&&items.length&&items[0].webkitGetAsEntry){
+    const entries=[];
+    for(let i=0;i<items.length;i++){
+      const it=items[i];
+      if(it.kind!=='file')continue;
+      const en=it.webkitGetAsEntry&&it.webkitGetAsEntry();
+      if(en)entries.push(en);
+    }
+    for(const en of entries)await walkEntry(en,'',out);
+    if(out.length)return out;
+  }
+  for(const f of dt.files)out.push({file:f,path:f.webkitRelativePath||f.name});
+  return out;
+}
+
+$('#pickFiles').onclick=()=>$('#fileInput').click();
+$('#pickFolder').onclick=()=>$('#folderInput').click();
+$('#fileInput').onchange=async e=>{
+  await addFiles([...e.target.files].map(f=>({file:f,path:f.name})));
+  e.target.value='';
+};
+$('#folderInput').onchange=async e=>{
+  await addFiles([...e.target.files].map(f=>({file:f,path:f.webkitRelativePath||f.name})));
+  e.target.value='';
+};
+$('#themeBtn').onclick=()=>{
+  const r=document.documentElement;
+  r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');
 };
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
-}
-
-function formatBytes(n) {
-  if (n < 1024) return n + ' B';
-  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
-  return (n / 1048576).toFixed(1) + ' MB';
-}
-
-function formatTimestamp(ts) {
-  if (!ts) return '';
-  const n = Number(ts);
-  if (isNaN(n)) return escapeHtml(String(ts));
-  const date = n > 1e12 ? new Date(n) : new Date(n * 1000);
-  return date.toLocaleString();
-}
-
-function renderTree(value) {
-  if (value === null) return '<span class="null">null</span>';
-  const type = typeof value;
-  if (type === 'string') return `<span class="string">"${escapeHtml(value)}"</span>`;
-  if (type === 'number') return `<span class="number">${value}</span>`;
-  if (type === 'boolean') return `<span class="boolean">${value}</span>`;
-  if (Array.isArray(value)) {
-    if (!value.length) return '[]';
-    return `<details open><summary>Array(${value.length})</summary><ul>` +
-      value.map((v, i) => `<li><span class="key">[${i}]</span>: ${renderTree(v)}</li>`).join('') +
-      `</ul></details>`;
-  }
-  if (type === 'object') {
-    const keys = Object.keys(value);
-    if (!keys.length) return '{}';
-    return `<details open><summary>Object{${keys.length}}</summary><ul>` +
-      keys.map(k => `<li><span class="key">${escapeHtml(k)}</span>: ${renderTree(value[k])}</li>`).join('') +
-      `</ul></details>`;
-  }
-  return escapeHtml(String(value));
-}
-
-function renderStringMap(map) {
-  const rows = Object.entries(map).map(([key, val]) => {
-    if (val && typeof val === 'object') {
-      const value = val.value ?? '';
-      const href = val.href ?? '';
-      const ts = val.timestamp ?? '';
-      return `<tr>
-        <td>${escapeHtml(key)}</td>
-        <td>${escapeHtml(value)}</td>
-        <td>${href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">link</a>` : ''}</td>
-        <td>${formatTimestamp(ts)}</td>
-      </tr>`;
+$('#searchAllBtn').onclick=()=>{
+  const q=prompt('Search across all loaded files:');
+  if(!q)return;
+  const term=q.toLowerCase(),hits=[];
+  for(const f of state.files){
+    if(f.error)continue;
+    const text=JSON.stringify(f.json),low=text.toLowerCase();
+    let i=low.indexOf(term);
+    while(i!==-1&&hits.length<400){
+      hits.push({file:f.path,snip:text.slice(Math.max(0,i-70),i+130)});
+      i=low.indexOf(term,i+term.length);
     }
-    return `<tr><td>${escapeHtml(key)}</td><td colspan="3">${escapeHtml(val)}</td></tr>`;
+  }
+  const rows=hits.map(h=>{
+    const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig');
+    return `<tr><td style="white-space:nowrap;color:var(--muted);font-size:12px">${esc(h.file)}</td>
+      <td>${esc(h.snip).replace(re,'<mark>$1</mark>')}</td></tr>`;
   }).join('');
-  return `<div class="card"><h3>Details</h3>
-    <table><thead><tr><th>Key</th><th>Value</th><th>Link</th><th>Time</th></tr></thead>
-    <tbody>${rows}</tbody></table></div>`;
-}
+  $('#content').innerHTML=card(`Search: "${esc(q)}" <span class="badge">${hits.length} hits</span>`,
+    hits.length?`<table><tbody>${rows}</tbody></table>`:'<div class="empty">No matches</div>');
+};
 
-function renderStringList(list) {
-  const rows = list.map((item, i) => `<tr>
-    <td>${i + 1}</td>
-    <td>${escapeHtml(item.value ?? '')}</td>
-    <td>${item.href ? `<a href="${escapeHtml(item.href)}" target="_blank" rel="noopener">link</a>` : ''}</td>
-    <td>${formatTimestamp(item.timestamp)}</td>
-  </tr>`).join('');
-  return `<table><thead><tr><th>#</th><th>Value</th><th>Link</th><th>Time</th></tr></thead>
-    <tbody>${rows}</tbody></table>`;
-}
-
-function renderLabelValues(list) {
-  const rows = list.map(item => `<tr>
-    <td>${escapeHtml(item.label ?? '')}</td>
-    <td>${escapeHtml(item.value ?? '')}</td>
-  </tr>`).join('');
-  return `<div class="card"><h3>Info</h3>
-    <table><thead><tr><th>Label</th><th>Value</th></tr></thead>
-    <tbody>${rows}</tbody></table></div>`;
-}
-
-function renderChat(json) {
-  const participants = (json.participants || []).map(p => p.name).filter(Boolean).join(', ');
-  const messages = (json.messages || []).slice().reverse();
-  const rows = messages.map(m => {
-    const sender = m.sender_name || 'Unknown';
-    const time = m.timestamp_ms ? new Date(m.timestamp_ms).toLocaleString() : '';
-    let content = m.content || '';
-    if (m.photos?.length) content += ` [${m.photos.length} photo(s)]`;
-    if (m.videos?.length) content += ` [${m.videos.length} video(s)]`;
-    if (m.audio_files?.length) content += ` [audio]`;
-    if (m.share) content += ` [shared: ${m.share.link || ''}]`;
-    return `<div class="card" style="margin:6px 0; padding:10px;">
-      <div style="font-size:12px; color:var(--muted);">
-        <strong>${escapeHtml(sender)}</strong> · ${escapeHtml(time)}
-      </div>
-      <div>${escapeHtml(content)}</div>
-    </div>`;
-  }).join('');
-  return `<div class="card"><h3>Conversation with ${escapeHtml(participants)} <span class="badge">${messages.length} messages</span></h3>${rows}</div>`;
-}
-
-function renderSmartItem(item, idx) {
-  if (item && typeof item === 'object') {
-    let html = `<div class="card"><h3>Item ${idx + 1}</h3>`;
-    if (item.title) html += `<div style="margin-bottom:8px;"><strong>${escapeHtml(item.title)}</strong></div>`;
-    if (item.string_list_data) {
-      html += renderStringList(item.string_list_data);
-    } else if (item.string_map_data) {
-      html += renderStringMap(item.string_map_data);
-    } else if (item.label_values) {
-      html += renderLabelValues(item.label_values);
-    } else {
-      html += `<div class="tree">${renderTree(item)}</div>`;
-    }
-    html += `</div>`;
-    return html;
-  }
-  return `<div class="card"><div class="tree">${renderTree(item)}</div></div>`;
-}
-
-function renderPretty(json) {
-  let html = '';
-  if (Array.isArray(json)) {
-    html += `<div class="card"><h3>Array <span class="badge">${json.length} items</span></h3>`;
-    html += json.map((item, idx) => renderSmartItem(item, idx)).join('');
-    html += `</div>`;
-    html += `<details class="card"><summary>Raw tree</summary><div class="tree">${renderTree(json)}</div></details>`;
-    return html;
-  }
-  if (json && typeof json === 'object') {
-    if (json.participants && json.messages) {
-      html += renderChat(json);
-    }
-    if (json.string_map_data) {
-      html += renderStringMap(json.string_map_data);
-    }
-    if (json.label_values) {
-      html += renderLabelValues(json.label_values);
-    }
-    const handled = new Set(['participants', 'messages', 'string_map_data', 'label_values']);
-    const otherKeys = Object.keys(json).filter(k => !handled.has(k));
-    if (otherKeys.length) {
-      html += `<div class="card"><h3>Overview</h3>`;
-      for (const k of otherKeys) {
-        const v = json[k];
-        let display;
-        if (Array.isArray(v)) {
-          display = `<span class="badge">${v.length} items</span>`;
-        } else if (v && typeof v === 'object') {
-          display = `<span class="badge">${Object.keys(v).length} keys</span>`;
-        } else {
-          display = escapeHtml(v);
-        }
-        html += `<div style="margin:6px 0;"><strong>${escapeHtml(k)}:</strong> ${display}</div>`;
-      }
-      html += `</div>`;
-    }
-    html += `<details class="card"><summary>Raw tree</summary><div class="tree">${renderTree(json)}</div></details>`;
-    return html;
-  }
-  return `<div class="card"><div class="tree">${renderTree(json)}</div></div>`;
-}
-
-function renderFileList() {
-  const list = $('#fileList');
-  const q = state.search;
-  const items = state.files
-    .map((f, i) => ({ f, i }))
-    .filter(({ f }) => !q || f.path.toLowerCase().includes(q));
-  if (!items.length) {
-    list.innerHTML = '<div class="empty">No matching files</div>';
-    return;
-  }
-  list.innerHTML = items.map(({ f, i }) => `
-    <div class="file-item ${i === state.selected ? 'active' : ''}" data-index="${i}">
-      <span>${escapeHtml(f.path)}</span>
-      <span class="size">${formatBytes(f.size)}</span>
-    </div>
-  `).join('');
-  list.querySelectorAll('.file-item').forEach(el => {
-    el.addEventListener('click', () => selectFile(Number(el.dataset.index)));
-  });
-}
-
-function selectFile(index) {
-  state.selected = index;
-  renderFileList();
-  const f = state.files[index];
-  if (!f) return;
-  $('#welcome').style.display = 'none';
-  $('#viewer').style.display = 'block';
-  $('#currentFile').textContent = f.path;
-
-  if (f.error) {
-    $('#prettyView').innerHTML = `<div class="card"><h3>Error parsing JSON</h3>
-      <p>${escapeHtml(f.error)}</p>
-      <pre class="raw">${escapeHtml(f.raw.slice(0, 20000))}</pre></div>`;
-    $('#rawView').innerHTML = `<pre class="raw">${escapeHtml(f.raw)}</pre>`;
-    return;
-  }
-  renderView();
-}
-
-function renderView() {
-  const f = state.files[state.selected];
-  if (!f || f.error) return;
-  if (state.tab === 'pretty') {
-    $('#prettyView').innerHTML = renderPretty(f.json);
-    $('#rawView').style.display = 'none';
-    $('#prettyView').style.display = 'block';
-  } else {
-    $('#rawView').innerHTML = `<pre class="raw">${escapeHtml(JSON.stringify(f.json, null, 2))}</pre>`;
-    $('#prettyView').style.display = 'none';
-    $('#rawView').style.display = 'block';
-  }
-}
-
-async function handleFiles(fileList) {
-  const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.json'));
-  if (!files.length) {
-    alert('No .json files selected.');
-    return;
-  }
-  for (const file of files) {
-    const text = await file.text();
-    let json = null;
-    let error = null;
-    try {
-      json = JSON.parse(text);
-    } catch (e) {
-      error = e.message;
-    }
-    state.files.push({
-      name: file.name,
-      path: file.webkitRelativePath || file.name,
-      size: file.size,
-      json,
-      error,
-      raw: text
-    });
-  }
-  renderFileList();
-  if (state.selected === -1 && state.files.length) {
-    selectFile(0);
-  }
-}
-
-$('#fileInput').addEventListener('change', e => handleFiles(e.target.files));
-$('#folderInput').addEventListener('change', e => handleFiles(e.target.files));
-$('#search').addEventListener('input', e => {
-  state.search = e.target.value.trim().toLowerCase();
-  renderFileList();
+let depth=0;
+window.addEventListener('dragenter',e=>{e.preventDefault();depth++;$('#overlay').classList.add('on');});
+window.addEventListener('dragover',e=>{e.preventDefault();$('#dropbox').classList.add('hot');});
+window.addEventListener('dragleave',e=>{
+  e.preventDefault();
+  if(--depth<=0){depth=0;$('#overlay').classList.remove('on');$('#dropbox').classList.remove('hot');}
 });
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    state.tab = btn.dataset.tab;
-    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
-    renderView();
-  });
-});
-$('#themeBtn').addEventListener('click', () => {
-  const root = document.documentElement;
-  const dark = root.getAttribute('data-theme') === 'dark';
-  root.setAttribute('data-theme', dark ? 'light' : 'dark');
+window.addEventListener('drop',async e=>{
+  e.preventDefault();depth=0;
+  $('#overlay').classList.remove('on');$('#dropbox').classList.remove('hot');
+  setStatus('Reading…');
+  const entries=await entriesFromDrop(e.dataTransfer);
+  await addFiles(entries);
 });
 </script>
 </body>
-            </html>
+    </html>
